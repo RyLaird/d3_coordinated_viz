@@ -170,7 +170,7 @@
     //chart frame dimensions
     var chartWidth = window.innerWidth *.3,
         chartHeight = 400;
-        leftPadding = 25,
+        leftPadding = 30,
         rightPadding = 2,
         topBottomPadding = 5,
         chartInnerWidth = chartWidth - leftPadding - rightPadding,
@@ -246,7 +246,7 @@
         //});
 
       var chartTitle = chart.append("text")
-          .attr("x", 50)
+          .attr("x", 120)
           .attr("y", 40)
           .attr("class", "chartTitle")
           .text("Volume in thousands of hectoliters " + expressed[3] + " in each region")
