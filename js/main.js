@@ -1,153 +1,273 @@
-//execute script when window is loaded
-window.onload = function(){
+//first line of main.js. wrap everything in a self-executing anonymous function to move to a local scope
+(function(){
 
-    var w = 900, h = 500;
+  //pseudo-global variables
+  //variables for data join
+  var attrArray = ["total_wine", "white", "red", "PDO", "PGI", "vino"];
+  var expressed = attrArray[0]; //initial attributes
 
-    var container = d3.select("#d3") //get the <body> element from the DOM
-        .append("svg") //put a new svg in the body
-        .attr("width", w) //assign width
-        .attr("height", h) //assign height
-        .attr("class", "container") //always assign class as block name for future styling
-        .style("background-color", "rgba(0,0,0,0.2)"); //only put semicolon at end of block
+  //begin script when window loads
+  window.onload = setMap();
 
-    //innerRect block
-    var innerRect = container.append("rect") //put a new rect in the svg
-        .datum(400) //a single value is a datum
-        .attr("width", function(d){ //rectangle width
-          return d * 2.2; //400 * 2 = 800
-        })
-        .attr("height", function(d){ //rectangle height
-          return d; //400
-        })
-        .attr("class", "innerRect") //class name
-        .attr("x", 55) //position from left on the horizontal axis
-        .attr("y", 50) //position from top on the vertical axis
-        .style("fill", "#FFFFFF"); //fill color
+//set up choropleth map
+  function setMap(){
 
-    var dataArray = [10, 20, 30, 40, 50];
+    //map frame dimensions
+    var width = window.innerWidth * 0.4,
+        height = 460;
 
-    var cityPop = [
-      {
-          city: 'Madison',
-          population: 233209
-      },
-      {
-          city: 'Milwaukee',
-          population: 594833
-      },
-      {
-          city: 'Green Bay',
-          population: 104057
-      },
-      {
-          city: 'Superior',
-          population: 27244
-      }
-  ];
+    //create new svg container for the map
+    var map = d3.select("#d3")
+      .append("svg")
+      .attr("class", "map")
+      .attr("width", width)
+      .attr("height", height);
 
-    //find the minimum value of an array
-    var minPop = d3.min(cityPop, function(d){
-        return d.population;
-    });
+    //create Albers equal area conic projection centered on italy
+    var projection = d3.geoAlbers()
+        .center([0, 41.78])
+        .rotate([-12.34, 0, 0])
+        .parallels([43,62])
+        .scale(2450.51)
+        .translate([width / 2, height / 2]);
 
-    //find the maximum value of an array
-    var maxPop = d3.max(cityPop, function(d){
-        return d.population;
-    });
+    var path = d3.geoPath()
+        .projection(projection);
 
-    //scale for circles center y coordinate
-    var y = d3.scaleLinear()
-        .range([430, 50]) //changed from 440, 95 to extend y axis
-        .domain([0, 700000]); //changed from minPop, maxPop
+    //use promise.all() asynchronous data loading
+    //set empty promises and push files then promise.all()
+    var promises = [];
+    promises.push(d3.csv("data/italywine.csv"));
+    promises.push(d3.json("data/italy.topojson"));
+    promises.push(d3.json("data/regions.topojson"));
+    Promise.all(promises).then(callback);
 
-    var x = d3.scaleLinear() //create the scale
-        .range([90,810]) //output min and max, previously 810 max
-        .domain([0,3]); //input min and max
+    //function to set up index values for files in callback , translate to json and add to map
+    function callback(data) {
 
-    //color scale generator
-    var color = d3.scaleLinear()
-        .range([
-            "#FDBE85",
-            "#D94701"
-        ])
-        .domain([
-          minPop,
-          maxPop
-        ]);
+      wineData = data[0];
+      italy = data[1];
+      regions = data[2];
 
 
-    var circles = container.selectAll(".circles") //no circles yet
-        .data(cityPop) //feed in an array
-        .enter() //join data to selection
-        .append("circle") //add a circle for each datum
-        .attr("class", "circles") //apply a class name to all circles
-        .attr("id", function(d){
-            return d.city;
-        })
-        .attr("r", function(d){ //calcutlate the radius based on population value as circle area
-          var area = d.population * 0.01;
-          return Math.sqrt(area/Math.PI);
-        })
-        .attr("cx", function(d, i){ //use scale generator index to place each circle horizontally
-          return x(i);
-        })
-        .attr("cy", function(d){ //subtract value from 450 to "grow" circles up from the bottom instead of down from the top
-          return y(d.population);
-        })
-        .style("fill", function(d, i){ //add a fil based on color scale generator
-            return color(d.population);
-        })
-        .style("stroke", "#000"); //black circle stroke
+      //translate topoJSONs
+      var italyOutline = topojson.feature(italy, italy.objects.italy_admin0),
+          italyRegions = topojson.feature(regions, regions.objects.italy_admin1).features;
 
-    var yAxis = d3.axisLeft(y).scale(y);
+      var country = map.append("path")
+          .datum(italyOutline)
+          .attr("class", "country")
+          .attr("d", path);
 
-    //create axis g element and add axis
-    var axis = container.append("g")
-        .attr("class", "axis")
-        .attr("transform", "translate(50, 0)")
-        .call(yAxis);
+      italyRegions = joinData(italyRegions, wineData);
 
-    var title = container.append("text")
-        .attr("class", "title")
-        .attr("text-anchor", "middle")
-        .attr("x", 450)
-        .attr("y", 30)
-        .text("City Populations");
+      //create the color scale
+      var colorScale = makeColorScaleNatural(wineData);
 
-    var labels = container.selectAll(".labels")
-        .data(cityPop)
+      //add enumeration units to the map
+      setEnumerationUnits(italyRegions, map, path, colorScale);
+
+      //add coordinated visualization to the map
+      setChart(wineData, colorScale);
+
+    };
+  }; //last line of setMap
+
+  //function to join csv wine columns with json regions in italy
+  function joinData(italyRegions, wineData) {
+    //loop through csv to assign each set of csv attribute values to geojson region
+    for (var i=0; i<wineData.length; i++) {
+        var csvRegion = wineData[i]; //curret regions
+        var csvKey = csvRegion.Name_1; //the CSV primary key
+
+        //loop through geojson regions to find correct region
+        for (var a=0; a<italyRegions.length; a++) {
+
+            var geojsonProps = italyRegions[a].properties; //the current region geojson properties
+            var geojsonKey = geojsonProps.NAME_1; //the geojson primary csvKey
+
+            //where primary keys match, transfer csv data to geojson properties objects
+            if (geojsonKey == csvKey) {
+
+              //assing all attributes and values
+              attrArray.forEach(function(attr){
+                  var val = parseFloat(csvRegion[attr]); //get csv attribute value
+                  geojsonProps[attr] = val; //assign attribute and value to geojson properties
+              });
+            };
+        };
+    };
+    console.log(italyRegions);
+
+    return italyRegions;
+  }; //last line of joinData
+
+  //function to assign color scale to italy regions
+  function makeColorScaleNatural(data){
+      var colorClasses = [
+        "#f2f0f7",
+        "#cbc9e2",
+        "#9e9ac8",
+        "#756bb1",
+        "#54278f"
+      ];
+
+      //create color scale generator
+      var colorScale = d3.scaleQuantile()  //possibly use .scaleThreshold .scaleQuantile
+          .range(colorClasses);
+
+      //build an array of all values of the expressed attribute
+      var domainArray = [];
+      for (var i=0; i<data.length; i++){
+          var val = parseFloat(data[i][expressed]);
+          domainArray.push(val);
+      };
+
+      //the following is needed only for Natural Breaks
+      //cluster data using ckmeans clustering algorithm to create natural breaks
+      //var clusters = ss.ckmeans(domainArray, 5);
+      //reset domain array to cluster minimums
+      //domainArray = clusters.map(function(d) {
+      //    return d3.min(d);
+      //});
+      //remove first value from domain array to create class breakpoints
+      //domainArray.shift();
+
+      //assign array of expressed values as scale domain
+      colorScale.domain(domainArray);
+
+      return colorScale;
+  }; //last line of makeColorScaleNatural function
+
+  //function to test for data value and return color
+  function choropleth(props, colorScale){
+      //make sure attribute value is a number
+      var val = parseFloat(props[expressed]);
+      //if attribute value exists, assign a color; otherwise assign gray
+      if (typeof val == 'number' && !isNaN(val)){
+          return colorScale(val);
+      } else {
+          return "#CCC";
+      };
+  }; //last line of choropleth function
+
+  function setEnumerationUnits(italyRegions, map, path, colorScale) {
+    var wineRegions = map.selectAll(".regions")
+        .data(italyRegions)
         .enter()
-        .append("text")
-        .attr("class", "labels")
-        .attr("text-anchor", "left")
-        .attr("y", function(d){
-          //vertical position centered on each circle
-          return y(d.population) + 5;
-        });
-
-    //first line of label
-    var nameLine = labels.append("tspan")
-        .attr("class", "nameLine")
-        .attr("x", function(d, i){
-          //horizontal position to the right of each circle
-          return x(i) + Math.sqrt(d.population * 0.01 / Math.PI) + 5;
+        .append("path")
+        .attr("class", function(d){
+          return "regions " + d.properties.NAME_1;
         })
-        .text(function(d){
-          return d.city;
-        });
+        .attr("d", path)
+        .style("fill", function(d){
+                return choropleth(d.properties, colorScale);
+            });
+  }; //last line of setEnumerationUnits function
 
-    //create format generator
-    var format = d3.format(",");
+  //function to create coordinated bar chart
+  function setChart(wineData, colorScale){
+    //chart frame dimensions
+    var chartWidth = window.innerWidth *.3,
+        chartHeight = 400;
+        leftPadding = 25,
+        rightPadding = 2,
+        topBottomPadding = 5,
+        chartInnerWidth = chartWidth - leftPadding - rightPadding,
+        chartInnerHeight = chartHeight - topBottomPadding * 2,
+        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
-    //second line of label
-    var popLine = labels.append("tspan")
-        .attr("class", "popLine")
-        .attr("x", function(d, i){
-          //horizontal position to the right of each circle
-          return x(i) + Math.sqrt(d.population * 0.01 / Math.PI) + 5;
+    //create a second svg element to hold the bar chart
+    var chart = d3.select("#chart")
+        .append("svg")
+        .attr("width", chartWidth)
+        .attr("height", chartHeight)
+        .attr("class", "chart");
+
+    //create a rectangle for chart backgound fill
+    var chartBackgound = chart.append("rect")
+        .attr("class", "chartBackgound")
+        .attr("width", chartInnerWidth)
+        .attr("height", chartInnerHeight)
+        .attr("transform", translate);
+
+
+    //create a scale to size bars proportionally to frame
+    var yScale = d3.scaleLinear()
+        .range([390, 0])
+        .domain([0, 11500]);
+
+    //set bars for each province
+    var bars = chart.selectAll(".bar")
+        .data(wineData)
+        .enter()
+        .append("rect")
+        .sort(function(a,b){
+              return b[expressed]-a[expressed]
         })
-        .attr("dy", "15") //vertical offset
-        .text(function(d){
-          return "Pop. " + format(d.population); //use format generator to format numbers
+        .attr("class", function(d) {
+            return "bar " + d.Name_1;
+        })
+        .attr("width", chartInnerWidth / wineData.length -1)
+        .attr("x", function(d, i){
+            return i * (chartInnerWidth / wineData.length) + leftPadding;
+        })
+        .attr("height", function(d, i) {
+            return 390 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d, i) {
+          return yScale(parseFloat(d[expressed])) + topBottomPadding;
+        })
+        .style("fill", function(d) {
+            return choropleth(d, colorScale);
         });
-};
+
+    //showing number values in chart on bars, not ideal for thousands
+    //var numbers = chart.selectAll(".numbers")
+        //.data(wineData)
+        //.enter()
+        //.append("text")
+        //.sort(function(a, b) {
+          //  return a[expressed]-b[expressed]
+      //  })
+      //  .attr("class", function(d) {
+        //    return "numbers " + d.Name_1;
+        //})
+        //.attr("text-anchor", "middle")
+        //.attr("x", function(d, i) {
+          //  var fraction = chartWidth / wineData.length;
+          //  return i * fraction + (fraction -1) / 2;
+      //  })
+      //  .attr("y", function(d) {
+            //return chartHeight - yScale(parseFloat(d[expressed])) + 15;
+      //  })
+      //  .text(function(d) {
+          //  return d[expressed];
+        //});
+
+      var chartTitle = chart.append("text")
+          .attr("x", 50)
+          .attr("y", 40)
+          .attr("class", "chartTitle")
+          .text("Volume in thousands of hectoliters " + expressed[3] + " in each region")
+
+      //create vertical axis generator
+      var yAxis = d3.axisLeft()
+          .scale(yScale);
+
+      //place axis
+      var axis = chart.append("g")
+          .attr("class", "axis")
+          .attr("transform", translate)
+          .call(yAxis);
+
+      //create fram for chart border
+      var chartFrame = chart.append("rect")
+          .attr("class", "chartFrame")
+          .attr("width", chartInnerWidth)
+          .attr("height", chartInnerHeight)
+          .attr("transform", translate);
+
+  }; //last line of setChart function
+
+})(); //last line of main.js

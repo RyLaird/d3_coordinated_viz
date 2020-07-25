@@ -8,7 +8,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>Bare - Start Bootstrap Template</title>
+  <title>Italy's Wine Production</title>
 
   <!-- Bootstrap core CSS -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -23,7 +23,7 @@
   <!-- Navigation -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
     <div class="container">
-      <a class="navbar-brand" href="#">Start Bootstrap</a>
+      <a class="navbar-brand" href="#">Italian Wine Regions</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -52,16 +52,20 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-12 text-center">
-        <h1 class="mt-5">A Bootstrap 4 Starter Template</h1>
-        <p class="lead">Complete with pre-defined file paths and responsive navigation!</p>
+        <h1 class="mt-5">Italian Wine</h1>
+        <p class="lead">A look into some of the world's most famous wine producing regions</p>
         <ul class="list-unstyled">
-          <li>Bootstrap 4.5.0</li>
-          <li>jQuery 3.5.1</li>
         </ul>
       </div>
     </div>
+    <div class="row justify-content-center">
+      <div id="chart" class="col">
+      </div>
+      <div id="d3" class="col-lg-auto">
+      </div>
+    </div>
     <div class="row">
-      <div id="d3" class="col">
+      <div class="col-lg-12 text-center">
       </div>
     </div>
   </div>
@@ -70,7 +74,10 @@
   <script src="vendor/jquery/jquery.slim.min.js"></script>
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <!-- d3 and main JavaScript -->
-  <script src="lib/d3.js"></script>
+  <script src='https://unpkg.com/simple-statistics@7.1.0/dist/simple-statistics.min.js'>
+  </script>
+  <script src = "lib/d3-queue.min.js"></script>
+  <script src="lib/topojson.min.js"></script>
   <script src ="lib/d3.min.js"></script>
   <script src="js/main.js"></script>
 
