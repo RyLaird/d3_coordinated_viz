@@ -6,6 +6,21 @@
   var attrArray = ["total_wine", "white", "red", "PDO", "PGI", "vino"];
   var expressed = attrArray[0]; //initial attributes
 
+  //chart frame dimensions
+  var chartWidth = window.innerWidth *.3,
+      chartHeight = 400;
+      leftPadding = 30,
+      rightPadding = 2,
+      topBottomPadding = 5,
+      chartInnerWidth = chartWidth - leftPadding - rightPadding,
+      chartInnerHeight = chartHeight - topBottomPadding * 2,
+      translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+
+  //create a scale to size bars proportionally to frame
+  var yScale = d3.scaleLinear()
+      .range([390, 0])
+      .domain([0, 11500]);
+
   //begin script when window loads
   window.onload = setMap();
 
@@ -70,8 +85,102 @@
       //add coordinated visualization to the map
       setChart(wineData, colorScale);
 
+      //dropdown
+      createDropdown(wineData);
+
     };
   }; //last line of setMap
+
+  //function to create a dropdown menu for attribute selection
+  function createDropdown(wineData){
+    //add select element
+    var dropdown = d3.select("#navbarResponsive")
+        .append("select")
+        .attr("class", "dropdown")
+        .on("change", function() {
+            changeAttribute(this.value, wineData)
+        });
+
+    //add initial proportion
+    var titleOption = dropdown.append("option")
+        .attr("class", "titleOption")
+        .attr("disabled", "true")
+        .text("Select Attribute");
+
+    //add attribute name options
+    var attrOptions = dropdown.selectAll("attrOptions")
+        .data(attrArray)
+        .enter()
+        .append("option")
+        .attr("value", function(d) { return d })
+        .text(function(d){ return d });
+
+  }; //last line of createDropdown function
+
+  //dropdown change listener handler
+  function changeAttribute(attribute, wineData){
+      //change the expressed attribute
+      expressed = attribute;
+
+      //recreate the color scale
+      var colorScale = makeColorScaleNatural(wineData);
+
+      //recolor enumeration units
+      var regions = d3.selectAll(".regions")
+          .style("fill", function(d){
+                return choropleth(d.properties, colorScale)
+          });
+
+      //re-sort, resize, and recolor bars
+      var bars = d3.selectAll(".bar")
+      //re-sort bars
+      .sort(function(a, b) {
+          return b[expressed] -a[expressed];
+      });
+
+
+      //.attr("x", function(d,i){
+        //  return i * (chartInnerWidth / wineData.length) + leftPadding;
+      //})
+      //resize bars
+      //.attr("height", function(d,i){
+        //  return 463 -yScale(parseFloat(d[expressed]));
+      //})
+      //.attr("y", function(d, i){
+        //  return yScale(parseFloat(d[expressed])) + topBottomPadding;
+      //})
+      //recolor bars
+      //.style("fill", function(d){
+        //  return choropleth(d, colorScale);
+      //});
+
+      updateChart(bars, wineData.length, colorScale);
+
+  }; //last line of changeAttribute function
+
+  //function to position, size, and color bars in chart
+  function updateChart(bars, n, colorScale){
+      //position bars
+      bars.attr("x", function(d,i){
+          return i * (chartInnerWidth / n) + leftPadding;
+      })
+      //size/resize bars
+      .attr("height", function(d, i){
+          return 463 - yScale(parseFloat(d[expressed]));
+      })
+      .attr("y", function(d,i){
+          return yScale(parseFloat(d[expressed])) + topBottomPadding;
+      })
+      //color/recolor bars
+      .style("fill", function(d){
+          return choropleth(d,colorScale);
+      })
+      //at the bottom of updateChart()...add text to chart title
+      var chartTitle = d3.select(".chartTitle")
+      .text("Number of Variable " + expressed[3] + " in each region");
+
+  };
+
 
   //function to join csv wine columns with json regions in italy
   function joinData(italyRegions, wineData) {
@@ -167,15 +276,6 @@
 
   //function to create coordinated bar chart
   function setChart(wineData, colorScale){
-    //chart frame dimensions
-    var chartWidth = window.innerWidth *.3,
-        chartHeight = 400;
-        leftPadding = 30,
-        rightPadding = 2,
-        topBottomPadding = 5,
-        chartInnerWidth = chartWidth - leftPadding - rightPadding,
-        chartInnerHeight = chartHeight - topBottomPadding * 2,
-        translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //create a second svg element to hold the bar chart
     var chart = d3.select("#chart")
@@ -191,12 +291,6 @@
         .attr("height", chartInnerHeight)
         .attr("transform", translate);
 
-
-    //create a scale to size bars proportionally to frame
-    var yScale = d3.scaleLinear()
-        .range([390, 0])
-        .domain([0, 11500]);
-
     //set bars for each province
     var bars = chart.selectAll(".bar")
         .data(wineData)
@@ -208,19 +302,21 @@
         .attr("class", function(d) {
             return "bar " + d.Name_1;
         })
-        .attr("width", chartInnerWidth / wineData.length -1)
-        .attr("x", function(d, i){
-            return i * (chartInnerWidth / wineData.length) + leftPadding;
-        })
-        .attr("height", function(d, i) {
-            return 390 - yScale(parseFloat(d[expressed]));
-        })
-        .attr("y", function(d, i) {
-          return yScale(parseFloat(d[expressed])) + topBottomPadding;
-        })
-        .style("fill", function(d) {
-            return choropleth(d, colorScale);
-        });
+        .attr("width", chartInnerWidth / wineData.length -1);
+
+        //no longer needed once updateChart function runs
+//        .attr("x", function(d, i){
+    //        return i * (chartInnerWidth / wineData.length) + leftPadding;
+    //    })
+    //    .attr("height", function(d, i) {
+    //        return 390 - yScale(parseFloat(d[expressed]));
+    //    })
+    //    .attr("y", function(d, i) {
+    //      return yScale(parseFloat(d[expressed])) + topBottomPadding;
+    //    })
+    //    .style("fill", function(d) {
+    //        return choropleth(d, colorScale);
+    //    });
 
     //showing number values in chart on bars, not ideal for thousands
     //var numbers = chart.selectAll(".numbers")
@@ -249,7 +345,7 @@
           .attr("x", 120)
           .attr("y", 40)
           .attr("class", "chartTitle")
-          .text("Volume in thousands of hectoliters " + expressed[3] + " in each region")
+          .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
 
       //create vertical axis generator
       var yAxis = d3.axisLeft()
@@ -267,6 +363,9 @@
           .attr("width", chartInnerWidth)
           .attr("height", chartInnerHeight)
           .attr("transform", translate);
+
+      //set bar positions, heights, and colors
+      updateChart(bars, wineData.length, colorScale);
 
   }; //last line of setChart function
 
