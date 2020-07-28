@@ -8,8 +8,8 @@
 
   //chart frame dimensions
   var chartWidth = window.innerWidth *.3,
-      chartHeight = 400;
-      leftPadding = 30,
+      chartHeight = 390,
+      leftPadding = 35,
       rightPadding = 2,
       topBottomPadding = 5,
       chartInnerWidth = chartWidth - leftPadding - rightPadding,
@@ -18,8 +18,8 @@
 
   //create a scale to size bars proportionally to frame
   var yScale = d3.scaleLinear()
-      .range([390, 0])
-      .domain([0, 11500]);
+      .range([380, 0])
+      .domain([0, 12000]);
 
   //begin script when window loads
   window.onload = setMap();
@@ -127,6 +127,8 @@
 
       //recolor enumeration units
       var regions = d3.selectAll(".regions")
+          .transition()
+          .duration(1000)
           .style("fill", function(d){
                 return choropleth(d.properties, colorScale)
           });
@@ -136,7 +138,12 @@
       //re-sort bars
       .sort(function(a, b) {
           return b[expressed] -a[expressed];
-      });
+      })
+      .transition() //add animation
+      .delay(function(d, i){
+          return i * 20
+      })
+      .duration(500);
 
 
       //.attr("x", function(d,i){
@@ -166,7 +173,7 @@
       })
       //size/resize bars
       .attr("height", function(d, i){
-          return 463 - yScale(parseFloat(d[expressed]));
+          return 380 - yScale(parseFloat(d[expressed]));
       })
       .attr("y", function(d,i){
           return yScale(parseFloat(d[expressed])) + topBottomPadding;
@@ -271,7 +278,10 @@
         .attr("d", path)
         .style("fill", function(d){
                 return choropleth(d.properties, colorScale);
-            });
+            })
+        .on("mouseover", function(d){
+            highlight(d.properties);
+        });
   }; //last line of setEnumerationUnits function
 
   //function to create coordinated bar chart
@@ -302,7 +312,8 @@
         .attr("class", function(d) {
             return "bar " + d.Name_1;
         })
-        .attr("width", chartInnerWidth / wineData.length -1);
+        .attr("width", chartInnerWidth / wineData.length -1)
+        .on("mouseover", highlight);
 
         //no longer needed once updateChart function runs
 //        .attr("x", function(d, i){
@@ -342,7 +353,7 @@
         //});
 
       var chartTitle = chart.append("text")
-          .attr("x", 120)
+          .attr("x", 90)
           .attr("y", 40)
           .attr("class", "chartTitle")
           .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
@@ -368,5 +379,12 @@
       updateChart(bars, wineData.length, colorScale);
 
   }; //last line of setChart function
+
+  function highlight(props){
+        //change stroke
+        var selected = d3.selectAll("." + props.NAME_1)
+          .style("stroke", "blue")
+          .style("stroke-width", "2");
+  } //last line of highlight function
 
 })(); //last line of main.js
