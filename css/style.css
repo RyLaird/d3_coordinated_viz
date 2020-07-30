@@ -73,7 +73,14 @@ option {
   background-size: cover;
 }
 
-#jumbohead {
+#jumbohead h1 {
+  font-family:Georgia, serif;
   color: white;
   text-shadow: black 0.2em 0.2em 0.3em;
+}
+
+#jumbohead p {
+  font-family: Tahoma, Geneva, sans-serif;
+  font-weight: bold;
+  text-shadow: white 0.1em 0.1em 0.2em;
 }
