@@ -62,3 +62,18 @@
 option {
     font-weight: normal;
 }
+
+#winecorks {
+  width: cover;
+  height: 50px;
+}
+
+#jumbohead {
+  background-image: url("/images/vineyard.png");
+  background-size: cover;
+}
+
+#jumbohead {
+  color: white;
+  text-shadow: black 0.1em 0.1em 0.2em;
+}

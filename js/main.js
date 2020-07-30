@@ -28,7 +28,7 @@
   function setMap(){
 
     //map frame dimensions
-    var width = window.innerWidth * 0.4,
+    var width = window.innerWidth * 0.5,
         height = 460;
 
     //create new svg container for the map
@@ -356,7 +356,7 @@
           .attr("x", 90)
           .attr("y", 40)
           .attr("class", "chartTitle")
-          .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
+          .text("Volume in thousands of hectoliters " + expressed[5] + " in each region");
 
       //create vertical axis generator
       var yAxis = d3.axisLeft()
