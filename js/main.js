@@ -122,6 +122,28 @@
       //change the expressed attribute
       expressed = attribute;
 
+      //change yScale with data change
+      wineMax = d3.max(wineData, function(d)
+      {return parseFloat(d[expressed]);
+      });
+
+      //update yAxis
+      yScale = d3.scaleLinear()
+          .range([380, 0])
+          .domain([0, wineMax*1.1]);
+
+      //update y Axis
+      d3.select(".axis").remove();
+      var yAxis = d3.axisLeft()
+        .scale(yScale);
+
+      //place axis
+      var axis = d3.select(".chart")
+          .append("g")
+          .attr("class", "axis")
+          .attr("transform", translate)
+          .call(yAxis);
+
       //recreate the color scale
       var colorScale = makeColorScaleNatural(wineData);
 
@@ -184,7 +206,7 @@
       })
       //at the bottom of updateChart()...add text to chart title
       var chartTitle = d3.select(".chartTitle")
-      .text("Number of Variable " + expressed[3] + " in each region");
+      .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
 
   };
 
@@ -281,7 +303,12 @@
             })
         .on("mouseover", function(d){
             highlight(d.properties);
-        });
+        })
+        .on("mouseout", function(d){
+            dehighlight(d.properties);
+        })
+        var desc = wineRegions.append("desc")
+            .text('{"stroke": "#000" , "stroke-width": "0.5px"}');
   }; //last line of setEnumerationUnits function
 
   //function to create coordinated bar chart
@@ -313,7 +340,10 @@
             return "bar " + d.Name_1;
         })
         .attr("width", chartInnerWidth / wineData.length -1)
-        .on("mouseover", highlight);
+        .on("mouseover", highlight)
+        .on("mouseout", dehighlight)
+        var desc = bars.append("desc")
+            .text('{"stroke": "none", "stroke-width": "0px"}');
 
         //no longer needed once updateChart function runs
 //        .attr("x", function(d, i){
@@ -356,7 +386,7 @@
           .attr("x", 90)
           .attr("y", 40)
           .attr("class", "chartTitle")
-          .text("Volume in thousands of hectoliters " + expressed[5] + " in each region");
+          .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
 
       //create vertical axis generator
       var yAxis = d3.axisLeft()
@@ -386,5 +416,26 @@
           .style("stroke", "blue")
           .style("stroke-width", "2");
   } //last line of highlight function
+
+  //function to reset the element style on mouseout
+  function dehighlight(props){
+      var selected = d3.selectAll("." + props.NAME_1)
+          .style("stroke", function(){
+              return getStyle(this, "stroke")
+          })
+          .style("stroke-width", function(){
+              return getStyle(this, "stroke-width")
+          });
+
+        function getStyle(element, styleName){
+            var styleText = d3.select(element)
+              .select("desc")
+              .text();
+
+            var styleObject = JSON.parse(styleText);
+
+            return styleObject[styleName];
+        };
+  }; //last line of dehighlight function
 
 })(); //last line of main.js
