@@ -28,7 +28,7 @@
   function setMap(){
 
     //map frame dimensions
-    var width = window.innerWidth * 0.5,
+    var width = window.innerWidth * 0.4,
         height = 460;
 
     //create new svg container for the map
@@ -94,7 +94,7 @@
   //function to create a dropdown menu for attribute selection
   function createDropdown(wineData){
     //add select element
-    var dropdown = d3.select("#navbarResponsive")
+    var dropdown = d3.select("#regionDrop")
         .append("select")
         .attr("class", "dropdown")
         .on("change", function() {
