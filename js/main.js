@@ -69,6 +69,8 @@
       var italyOutline = topojson.feature(italy, italy.objects.italy_admin0),
           italyRegions = topojson.feature(regions, regions.objects.italy_admin1).features;
 
+          console.log(italyRegions);
+
       var country = map.append("path")
           .datum(italyOutline)
           .attr("class", "country")
@@ -215,14 +217,14 @@
   function joinData(italyRegions, wineData) {
     //loop through csv to assign each set of csv attribute values to geojson region
     for (var i=0; i<wineData.length; i++) {
-        var csvRegion = wineData[i]; //curret regions
-        var csvKey = csvRegion.Name_1; //the CSV primary key
+        var csvRegion = wineData[i]; //current regions
+        var csvKey = csvRegion.adm1_code; //the CSV primary key
 
         //loop through geojson regions to find correct region
         for (var a=0; a<italyRegions.length; a++) {
 
             var geojsonProps = italyRegions[a].properties; //the current region geojson properties
-            var geojsonKey = geojsonProps.NAME_1; //the geojson primary csvKey
+            var geojsonKey = geojsonProps.adm1_code; //the geojson primary csvKey
 
             //where primary keys match, transfer csv data to geojson properties objects
             if (geojsonKey == csvKey) {
@@ -295,18 +297,19 @@
         .enter()
         .append("path")
         .attr("class", function(d){
-          return "regions " + d.properties.NAME_1;
+          return "regions " + d.properties.adm1_code;
         })
         .attr("d", path)
         .style("fill", function(d){
                 return choropleth(d.properties, colorScale);
-            })
+        })
         .on("mouseover", function(d){
             highlight(d.properties);
         })
         .on("mouseout", function(d){
             dehighlight(d.properties);
         })
+        
         var desc = wineRegions.append("desc")
             .text('{"stroke": "#000" , "stroke-width": "0.5px"}');
   }; //last line of setEnumerationUnits function
@@ -337,7 +340,7 @@
               return b[expressed]-a[expressed]
         })
         .attr("class", function(d) {
-            return "bar " + d.Name_1;
+            return "bar " + d.adm1_code;
         })
         .attr("width", chartInnerWidth / wineData.length -1)
         .on("mouseover", highlight)
@@ -368,7 +371,7 @@
           //  return a[expressed]-b[expressed]
       //  })
       //  .attr("class", function(d) {
-        //    return "numbers " + d.Name_1;
+        //    return "numbers " + d.adm1_code;
         //})
         //.attr("text-anchor", "middle")
         //.attr("x", function(d, i) {
@@ -412,14 +415,14 @@
 
   function highlight(props){
         //change stroke
-        var selected = d3.selectAll("." + props.NAME_1)
+        var selected = d3.selectAll("." + props.adm1_code)
           .style("stroke", "blue")
           .style("stroke-width", "2");
   } //last line of highlight function
 
   //function to reset the element style on mouseout
   function dehighlight(props){
-      var selected = d3.selectAll("." + props.NAME_1)
+      var selected = d3.selectAll("." + props.adm1_code)
           .style("stroke", function(){
               return getStyle(this, "stroke")
           })
