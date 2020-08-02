@@ -19,13 +19,11 @@
 </head>
 
 <body>
-
-  <!-- Navigation -->
-<div class="jumbotron text-center" style="margin-bottom:0" id="jumbohead">
-    <h1>Italian Wine</h1>
-    <p class=lead >A look into some of the world's most famous wine producing regions</p>
-</div>
   <!-- Page Content -->
+  <div class="jumbotron text-center" style="margin-bottom:0" id="jumbohead">
+      <h1>Italian Wine</h1>
+      <p class=lead >A look into some of the world's most famous wine producing regions</p>
+  </div>
   <div class="container-fluid">
     <div class="row mt-5">
       <div id="chart" class="offset-sm-2 col-md-3" align="center">
@@ -35,9 +33,28 @@
       <div id="d3" class="col-md-6" align="center">
       </div>
     </div>
-    <div class= "row no-gutters">
-      <div class=col>
-        <img src="/images/winecorks.png" class="img-fluid" id="winecorks">
+    <br><br>
+    <div class= "row">
+      <div id="regionChart"class=col>
+      </div>
+      <div id="wineClass" class=col>
+        <div id=col col-3>
+        <img src="/images/grapes.png" height= "75" width="150" style="float:left;"/>
+        <img src="/images/sniff.png" height= "75" width="150" style="float:right;"/>
+        <h3 style="text-align:center">Understanding Italian Wine Quality</h3>
+        <br><br>
+        <h6>The EU framework categorizes wine based on a classification system that is broken down into three broad categories.</h6>
+        <br><br>
+        <h6>Protected Designated Origin(PDO)</h6>
+        <p>This designation refers to a wine that has unique characteristics exclusively due to it's geographical environment along with natural and human factors.  All grapes and production takes place in the specific area.
+        This wine is known to have the highest restrictions; therefore, it also has the highest value in the classification system.</p>
+        <br><br>
+        <h6>Protected Geographical Indication(PDI)</h6>
+        <p>This designation still refers to a specific region where production takes place, but differs from PDO quality in that a minimum of 85% of the grapes must come from the designated region.
+        This is considered the middle tier of the classification system.</p>
+        <br><br>
+        <h6>Vino</h6>
+        <p>These wines are considered the lowest value due to having no geographical restrictions or production rules.</p>
       </div>
     </div>
   </div>
