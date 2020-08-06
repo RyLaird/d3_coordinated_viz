@@ -3,8 +3,17 @@
 
   //pseudo-global variables
   //variables for data join
-  var attrArray = ["total_wine", "white", "red", "PDO", "PGI", "vino"];
+  var attrArray = ["Total Wine Produced", "White Wine", "Red Wine", "PDO wine", "PGI wine", "Vino wine"];
   var expressed = attrArray[0]; //initial attributes
+
+  //setting up variables for piecharts
+  var pieHeight = 300,
+      pieWidth = 300,
+      //whichever is smaller, radius is half
+      pieRadius = Math.min(pieWidth, pieHeight) / 2;
+
+  var pieRedWhite = [{"type": "White", "percent": 57},{"type": "Red", "percent": 43}];
+  var pieQuality = [{"type": "PDO", "percent": 42},{"type": "PGI", "percent": 24},{"type": "Vino", "percent": 35}];
 
   //chart frame dimensions
   var chartWidth = window.innerWidth *.3,
@@ -20,6 +29,7 @@
   var yScale = d3.scaleLinear()
       .range([380, 0])
       .domain([0, 12000]);
+
 
   //begin script when window loads
   window.onload = setMap();
@@ -91,6 +101,9 @@
       createDropdown(wineData);
 
     };
+
+    setWinePie(pieRedWhite);
+
   }; //last line of setMap
 
   //function to create a dropdown menu for attribute selection
@@ -245,11 +258,11 @@
   //function to assign color scale to italy regions
   function makeColorScaleNatural(data){
       var colorClasses = [
-        "#f2f0f7",
-        "#cbc9e2",
-        "#9e9ac8",
-        "#756bb1",
-        "#54278f"
+        "#C9E892",
+        "#BEDB8A",
+        "#ACC77D",
+        "#889E63",
+        "#4F5C3A"
       ];
 
       //create color scale generator
@@ -399,11 +412,19 @@
       var yAxis = d3.axisLeft()
           .scale(yScale);
 
+      /*var xAxis = d3.axisBottom()
+          .scale(xScale); */
+
       //place axis
       var axis = chart.append("g")
           .attr("class", "axis")
           .attr("transform", translate)
           .call(yAxis);
+
+    /*  var axis = chart.append("g")
+          .attr("class", "xaxis")
+          .attr("transform", "translate(0," + (chartHeight - topBottomPadding) + ")")
+          .call(xAxis); */
 
       //create fram for chart border
       var chartFrame = chart.append("rect")
@@ -453,7 +474,7 @@
   function setLabel(props){
       //label content
       var labelAttribute = "<h1>" + props[expressed] +
-          "</h1><b>" + expressed + "</b>";
+          "</h1>" + expressed + "</b>";
 
       //create info label div
       var infolabel = d3.select("body")
@@ -489,6 +510,56 @@
       d3.select(".infolabel")
           .style("left", x + "px")
           .style("top", y + "px");
-  };
+
+  }; //last line of moveLabel function
+
+  function setWinePie(data) {
+
+        //set variables for pie chart colors
+        var wineColor = d3.scaleOrdinal()
+            .range(["#C0A561","#62030F"]);
+
+        var pie = d3.pie()
+            .value(function(d)  { return d.percent; })(data);
+
+        var arc = d3.arc()
+            .outerRadius(pieRadius-10)
+            .innerRadius(0);
+
+        var labelArc = d3.arc()
+            .outerRadius(pieRadius - 100)
+            .innerRadius(pieRadius - 65);
+
+        var svg = d3.select("#regionChart")
+                .append("svg")
+                .attr("width", pieWidth)
+                .attr("height", pieHeight)
+                      .append("g")
+                      //moving center point to half width and height
+                      .attr("transform", "translate(" + pieWidth/2 + "," + pieHeight/2 + ")");
+
+        var pieTitle = d3.select("#regionChart")
+              .append("class", "pieTitle")
+              .text("Total Grapes by Percentage")
+              .style('text-anchor', 'middle')
+              .style("fill", "black");
+
+        var g = svg.selectAll("arc")
+              .data(pie)
+              .enter().append("g")
+              .attr("class", "arc");
+
+        g.append("path")
+            .attr("d", arc)
+            .style("fill", function(d) { return wineColor(d.data.type);});
+
+
+
+        g.append("text")
+              .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+              .text(function(d) { return d.data.type;})
+              .style("fill", "#fff");
+
+          }; //last line of setWinePie
 
 })(); //last line of main.js

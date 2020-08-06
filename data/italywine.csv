@@ -1,4 +1,4 @@
-﻿id,NAME_1,adm1_code,total_wine,white,red,PDO,PGI,vino
+﻿id,NAME_1,adm1_code,Total Wine Produced,White Wine,Red Wine,PDO wine,PGI wine,Vino wine
 1,Veneto,ITA-1,11333,9066,2267,7820,1927,1473
 2,Apulia,ITA-2,9771,5179,4592,684,1759,7328
 3,Emilia-Romagna,ITA-3,5651,2995,2656,1243,2373,2034
