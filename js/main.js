@@ -103,6 +103,7 @@
     };
 
     setWinePie(pieRedWhite);
+    setQualityPie(pieQuality);
 
   }; //last line of setMap
 
@@ -221,7 +222,7 @@
       })
       //at the bottom of updateChart()...add text to chart title
       var chartTitle = d3.select(".chartTitle")
-      .text("Volume in thousands of hectoliters " + expressed[3] + " in each region");
+      .text("Volume in thousands of hectoliters");
 
   };
 
@@ -258,8 +259,8 @@
   //function to assign color scale to italy regions
   function makeColorScaleNatural(data){
       var colorClasses = [
-        "#C9E892",
-        "#BEDB8A",
+        "#C4BDB1",
+        "#94856D",
         "#ACC77D",
         "#889E63",
         "#4F5C3A"
@@ -325,7 +326,7 @@
         .on("mousemove", moveLabel);
 
         var desc = wineRegions.append("desc")
-            .text('{"stroke": "#000" , "stroke-width": "1px"}');
+            .text('{"stroke": "#000" , "stroke-width": "1.5px"}');
   }; //last line of setEnumerationUnits function
 
   //function to create coordinated bar chart
@@ -441,8 +442,8 @@
   function highlight(props){
         //change stroke
         var selected = d3.selectAll("." + props.adm1_code)
-          .style("stroke", "blue")
-          .style("stroke-width", "2");
+          .style("stroke", "#62030F")
+          .style("stroke-width", "3");
 
         setLabel(props);
   } //last line of highlight function
@@ -485,7 +486,7 @@
 
       var regionName = infolabel.append("div")
           .attr("class", "labelname")
-          .html(props.NAME_1 + " region");
+          .html((props.NAME_1 + " Region").bold());
   };
 
   //function to move info label with mouse
@@ -497,9 +498,9 @@
           .width;
       //use coordinates of mousemove event to set label coordinates
       var x1 = d3.event.clientX + 10,
-          y1 = d3.event.clientY - 75,
+          y1 = d3.event.clientY + 650,
           x2 = d3.event.clientX - labelWidth - 10,
-          y2 = d3.event.clientY + 25;
+          y2 = d3.event.clientY + 400;
 
       //horizontal label coordinate, testing for overflow
       var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1;
@@ -540,7 +541,7 @@
 
         var pieTitle = d3.select("#regionChart")
               .append("class", "pieTitle")
-              .text("Total Grapes by Percentage")
+              .text("Totals of Red / White by Percentage")
               .style('text-anchor', 'middle')
               .style("fill", "black");
 
@@ -551,7 +552,10 @@
 
         g.append("path")
             .attr("d", arc)
-            .style("fill", function(d) { return wineColor(d.data.type);});
+            .style("fill", function(d) { return wineColor(d.data.type);})
+            .attr("stroke", "white")
+            .style("stroke-width", "5px")
+            .style("opacity", 0.9);
 
 
 
@@ -561,5 +565,57 @@
               .style("fill", "#fff");
 
           }; //last line of setWinePie
+
+          function setQualityPie(data) {
+
+                //set variables for pie chart colors
+                var wineColor = d3.scaleOrdinal()
+                    .range(["#4F5C3A","#ACC77D", "#C4BDB1"]);
+
+                var pie = d3.pie()
+                    .value(function(d)  { return d.percent; })(data);
+
+                var arc = d3.arc()
+                    .outerRadius(pieRadius-10)
+                    .innerRadius(0);
+
+                var labelArc = d3.arc()
+                    .outerRadius(pieRadius - 100)
+                    .innerRadius(pieRadius - 65);
+
+                var svg = d3.select("#regionChart")
+                        .append("svg")
+                        .attr("width", pieWidth)
+                        .attr("height", pieHeight)
+                              .append("g")
+                              //moving center point to half width and height
+                              .attr("transform", "translate(" + pieWidth/2 + "," + pieHeight/2 + ")");
+
+                var pieTitle = d3.select("#regionChart")
+                      .append("class", "pieTitle")
+                      .text("Wine Quality by Percentage")
+                      .style('text-anchor', 'middle')
+                      .style("fill", "black");
+
+                var g = svg.selectAll("arc")
+                      .data(pie)
+                      .enter().append("g")
+                      .attr("class", "arc");
+
+                g.append("path")
+                    .attr("d", arc)
+                    .style("fill", function(d) { return wineColor(d.data.type);})
+                    .attr("stroke", "white")
+                    .style("stroke-width", "5px")
+                    .style("opacity", 0.9);
+
+
+
+                g.append("text")
+                      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+                      .text(function(d) { return d.data.type;})
+                      .style("fill", "#fff");
+
+                  };
 
 })(); //last line of main.js
