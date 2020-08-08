@@ -102,3 +102,7 @@ option {
     display: inline-block;
     line-height: 1em;
 }
+
+#regionDrop {
+  white-space: nowrap;
+}

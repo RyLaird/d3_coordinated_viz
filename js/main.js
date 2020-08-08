@@ -541,7 +541,7 @@
 
         var pieTitle = d3.select("#regionChart")
               .append("class", "pieTitle")
-              .text("Totals of Red / White by Percentage")
+              .text("Percent Red / White")
               .style('text-anchor', 'middle')
               .style("fill", "black");
 
@@ -594,7 +594,7 @@
 
                 var pieTitle = d3.select("#regionChart")
                       .append("class", "pieTitle")
-                      .text("Wine Quality by Percentage")
+                      .text("Quality by Percentage")
                       .style('text-anchor', 'middle')
                       .style("fill", "black");
 
