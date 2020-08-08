@@ -498,9 +498,9 @@
           .width;
       //use coordinates of mousemove event to set label coordinates
       var x1 = d3.event.clientX + 10,
-          y1 = d3.event.clientY + 650,
+          y1 = d3.event.clientY + 800,
           x2 = d3.event.clientX - labelWidth - 10,
-          y2 = d3.event.clientY + 400;
+          y2 = d3.event.clientY + 500;
 
       //horizontal label coordinate, testing for overflow
       var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1;
@@ -582,6 +582,7 @@
                 var labelArc = d3.arc()
                     .outerRadius(pieRadius - 100)
                     .innerRadius(pieRadius - 65);
+
 
                 var svg = d3.select("#regionChart")
                         .append("svg")
